@@ -25,8 +25,9 @@ class Atom():
 
 	def Save(self, file_path):
 		self.file_path = file_path
-		f = open(file_path, "w+")
-		data = f.write(self.id+"|"+self.data+"|"+self.children_atom_ids.join(','))
+		f = open(file_path, "w")
+		data = f.write(self.id+"|"+self.data+"|"+','.join(self.children_atom_ids))
+		f.truncate()
 		f.close()
 
 		return self
@@ -67,6 +68,7 @@ class AI_MEMORY():
 		self.atoms = []
 		self.memories = []
 		self.path = ""
+		self.threads = []
 	
 	def getPath(self):
 		return os.path.abspath(self.path)
@@ -92,29 +94,33 @@ class AI_MEMORY():
 					# Log to ai some how
 					Log("error", "Cannot Load Memory {name}".format(name=memory_file))
 		except Exception as e:
-			Log("error","Cannot Load Atom or Memory Data, "  + " "+ str(e.args))
+			Log("error","Cannot Load Atom or Memory Data, " + str(e.args))
 
 	def Save(self, path):
 		self.path = path
 		mk_dir(path)
 		try:
-			AtomPath = mk_dir(path+"/atoms")
-			MemoryPath = mk_dir(path+"/memories")
+			AtomPath = mk_dir(path+"/atoms/")
+			MemoryPath = mk_dir(path+"/memories/")
 			total = len(self.atoms) + len(self.memories)
-			counter = 1
+			counter = 0
 			for atom in self.atoms:
+				path = AtomPath+atom.data+".atom"
 				try:
+					counter=counter+1
 					#load Atom
-					atom.Save(AtomPath)
-					Output("".ljust(total-count, u"█").rjust(count, "#"))
+					atom.Save(path)
+					Output("# {0:1.0f}% Processing ".format(float(100.0/(total/counter)))+path)
 				except Exception as e:
 					# Log to ai some how
-					Log("error", "Cannot Save Atom {name}".format(name=atom.id) + " "+ str(e.args))
+					Log("error", "Cannot Save Atom {id}:{name} -> {path}".format(id=atom.id, name=atom.data, path=path) + " "+ str(e.args))
 			for memory in self.memories:
+				path = MemoryPath+memeory.data+".mem"
 				try:
+					counter=counter+1
 					#load Memory
-					memory.Save(MemoryPath)
-					Output("".ljust(total-count, u"█").rjust(count, "#"))
+					memory.Save(path)
+					Output("# {0:1.0f}% Processing ".format(float(100.0/(total/counter)))+path)
 				except Exception as e:
 					# Log to ai some how
 					Log("error", "Cannot Load Memory {name}".format(name=memory.id)+ str(e.args))
@@ -174,11 +180,14 @@ def BasicCommands():
 	pt = prettytable.PrettyTable(["Command", "Action"])
 	pt.add_row(["\\i","System Info"])
 	pt.add_row(["\\g","Generate First 26 Atoms"])
-	pt.add_row(["\\l","Load LAI Memory"])
 	pt.add_row(["\\s","Save LAI Memory"])
+	pt.add_row(["\\s+ <path>","Save LAI Memory To A Particular Directory"])
+	pt.add_row(["\\l","Load LAI Memory"])
+	pt.add_row(["\\l+ <path>","Load LAI Memory From A Particular Directory"])
 	pt.add_row(["\\c","Copyright Information"])
 	pt.add_row(["\\h","Displays This Menu"])
 	pt.add_row(["\\q","Quit LAI"])
+	pt.align = "l"
 	#pt.add_row([,""])
 	print(pt)
 
@@ -197,8 +206,9 @@ def Proccess(_input):
 			for id in range(1, 27):
 				data = chr(96+id)
 				Output("Making: "+ AI_MEM.getPath().replace('\\','/')+"/atoms/"+str(data)+".atom")
-				f = open(AI_MEM.getPath()+"/atoms/"+str(data)+".atom", "w+")
+				f = open(AI_MEM.getPath()+"/atoms/"+str(data)+".atom", "w")
 				f.write(str(id)+"|"+data+"|")
+				f.truncate()
 				f.close()
 			Output("DONE!")
 		elif _input == "\\q":
@@ -208,7 +218,9 @@ def Proccess(_input):
 			pt.add_row(["Data Path",AI_MEM.getPath()])
 			pt.add_row(["Total Atom",len(AI_MEM.atoms)])
 			pt.add_row(["Total Memories",len(AI_MEM.memories)])
+			pt.add_row(["Total Threads", 1 + len(AI_MEM.threads)])
 			pt.add_row(["System Memory Used", str(psutil.Process(os.getpid()).memory_info().rss / 1024) + " KBs"])
+			pt.align = "l"
 			print(pt)
 		elif "\\l" in _input:
 			path = _input[2:]

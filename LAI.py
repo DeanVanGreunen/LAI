@@ -6,24 +6,45 @@ Version = "1.0.0.0"
 # - Atoms will be stored in data/atoms/id.atom
 # - Memories will be stored in data/memories/ as a {id}.mem file
 
-def mkdir(path):
-	if not os.path.exists(path):
-		os.makedirs(path)
+def mk_dir(path):
+	dir = os.path.dirname(path)
+	if not os.path.exists(dir):
+		os.makedirs(dir)
 	return path
 
 #/////////////////////////////////////////////////////////
 # AI - App ClassesAS
 #/////////////////////////////////////////////////////////
+#format = "[id]|[data]|<chil_id>,<child_id>"
 class Atom():
 	def __init(self):
+		self.id = 0
 		self.file_path = ""
-
-	def Load(self, file_path):
-		self.file_path = file_path
-		return self
+		self.data = ""
+		self.children_atom_ids = [] #Adam = A,d,a,m and adam = a,d,a,m
 
 	def Save(self, file_path):
 		self.file_path = file_path
+		f = open(file_path, "w+")
+		data = f.write(self.id+"|"+self.data+"|"+self.children_atom_ids.join(','))
+		f.close()
+
+		return self
+
+	def Load(self, file_path):
+		self.file_path = file_path
+		f = open(file_path, "r")
+		data = f.readline()
+		f.close()
+		data = data.split('|')
+		self.id = data[0]
+		self.data = data[1]
+		if ',' in data[2]:
+			self.children_atom_ids = data[2].split(',')
+		elif len(data[2]) >=1:
+			self.children_atom_ids = [data[2]]
+		else:
+			self.children_atom_ids = []
 		return self
 
 class Memory():
@@ -52,44 +73,48 @@ class AI_MEMORY():
 
 	def Load(self, path):
 		self.path = path
-		mkdir(path)
+		mk_dir(path)
 		try:
-			AtomList = os.listdir(mkdir(path+"atoms"))
-			MemoryList = os.listdir(mkdir(path+"memories"))
+			AtomList = os.listdir(mk_dir(path+"/atoms"))
+			MemoryList = os.listdir(mk_dir(path+"/memories"))
 			for atom_file in AtomList:
 				try:
 					#load Atom
-					self.atoms.append(Atom().Load(atom_file))
+					self.atoms.append(Atom().Load(path+"/atoms/"+atom_file))
 				except Exception as e:
 					# Log to ai some how
 					Log("error", "Cannot Load Atom {name}".format(name=atom_file))
 			for memory_file in MemoryList:
 				try:
 					#load Memory
-					self.memories.append(Memory().Load(memory_file))
+					self.memories.append(Memory().Load(path+"/memories/"+memory_file))
 				except Exception as e:
 					# Log to ai some how
-					Log("error", "Cannot Load Memory {name}".format(name=atom_file))
+					Log("error", "Cannot Load Memory {name}".format(name=memory_file))
 		except Exception as e:
 			Log("error","Cannot Load Atom or Memory Data, " + e.message)
 
 	def Save(self, path):
 		self.path = path
-		mkdir(path)
+		mk_dir(path)
 		try:
-			AtomPath = mkdir(path+"atoms")
-			MemoryPath = mkdir(path+"memories")
+			AtomPath = mk_dir(path+"/atoms")
+			MemoryPath = mk_dir(path+"/memories")
+			total = len(self.atoms) + len(self.memories)
+			counter = 1
 			for atom in self.atoms:
 				try:
 					#load Atom
 					atom.Save(AtomPath)
+					Output("".ljust(total-count, u"█").rjust(count, "#"))
 				except Exception as e:
 					# Log to ai some how
-					Log("error", "Cannot Save Atom {name}".format(name=atom.id))
+					Log("error", "Cannot Save Atom {name}".format(name=atom.id) + " " + e)
 			for memory in self.memories:
 				try:
 					#load Memory
 					memory.Save(MemoryPath)
+					Output("".ljust(total-count, u"█").rjust(count, "#"))
 				except Exception as e:
 					# Log to ai some how
 					Log("error", "Cannot Load Memory {name}".format(name=memory.id))
@@ -120,7 +145,6 @@ def GetInput(Question="> "):
 
 # displays the output to the console
 def Output(_format, *args):
-	Log("output", _format.format(args))
 	print(_format.format(args))
 
 # used to load data from disk to memory
@@ -140,7 +164,7 @@ def SaveAtomByName(atom):
 
 # used for Logging actions, etc.
 def Log(LogType, LogInfo):
-	pass
+	Output("Log {0} | {1}".format(LogType, LogInfo))
 #/////////////////////////////////////////////////////////
 # End of Basic I/O Functions
 #/////////////////////////////////////////////////////////
@@ -149,9 +173,11 @@ def BasicCommands():
 	Output("\t\tBasic Commands")
 	pt = prettytable.PrettyTable(["Command", "Action"])
 	pt.add_row(["\\i","System Info"])
+	pt.add_row(["\\g","Generate First 26 Atoms"])
 	pt.add_row(["\\l","Load LAI Memory"])
 	pt.add_row(["\\s","Save LAI Memory"])
 	pt.add_row(["\\c","Copyright Information"])
+	pt.add_row(["\\h","Displays This Menu"])
 	pt.add_row(["\\q","Quit LAI"])
 	#pt.add_row([,""])
 	print(pt)
@@ -160,10 +186,21 @@ def BasicCommands():
 
 # process the input
 def Proccess(_input):
+	Output("======================================================================================")
 	global canQuit
 	if _input[0:1] == "\\": # \
 		if _input == "\\c":
 			Output("LAI is a Language Based Audio, Visual Artificial Intellegance Created, Copyrighted and TradeMarked By Dean Van Greunen as of January 1st, 2018.")
+		elif _input == "\\h":
+			BasicCommands()
+		elif _input == "\\g":
+			for id in range(1, 27):
+				data = chr(96+id)
+				Output("Making: "+ AI_MEM.getPath().replace('\\','/')+"/atoms/"+str(data)+".atom")
+				f = open(AI_MEM.getPath()+"/atoms/"+str(data)+".atom", "w+")
+				f.write(str(id)+"|"+data+"|")
+				f.close()
+			Output("DONE!")
 		elif _input == "\\q":
 			canQuit = True
 		elif _input == "\\i":
@@ -175,9 +212,15 @@ def Proccess(_input):
 			print(pt)
 		elif "\\l" in _input:
 			path = _input[2:]
+			AI_MEM.Load(AI_MEM.getPath())
+		elif "\\l+" in _input:
+			path = _input[3:]
 			AI_MEM.Load(path)
 		elif "\\s" in _input:
 			path = _input[2:]
+			AI_MEM.Save(AI_MEM.getPath())
+		elif "\\s+" in _input:
+			path = _input[3:]
 			AI_MEM.Save(path)
 		#else if _input == "\q":
 		#	canQuit = True

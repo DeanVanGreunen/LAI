@@ -1,0 +1,47 @@
+language and context understanding.
+
+Primary Key (a way to refere to each Atom by another Atom)
+Entity (A person)
+Relationship (artist "performs" song)
+Attribute (artist's name is "Bob")
+
+Combinations are:
+ - Entity with Relation to another Entity
+ - Entiry with an Attribute
+ - A Relation with an Attribute.
+
+Mapping natural language:
+ - Common noun is an Entity type
+ - Proper nouns is and Entity
+ - Transitive verb is a Relationship type
+ - Intransitive verb is an Attribute type
+ - Adjective is an Attribute for an entity
+ - Adverb is an Attribute for a relationship
+
+
+Atom a.k.a Syntactic atoms:
+ - The basic unit of syntax is not the word, but the syntactic atom, defined as a structure that fulfills a basic syntactic function. Syntactic atoms may be either a single word or a phrase that fulfills a single syntactic function.
+  - _Fido_ ate the bone.
+
+ - _The dog_ ate the bone.
+
+ - _The big yellow dog_ ate the bone.
+
+ - _Our dog that we raised from a puppy_ ate the bone.
+
+ - _Our dog that we raised from a puppy named Fido_ ate the bone.
+
+Elements with syntactic equivalence all belong to the same type of syntactic atom (NP, VP)
+
+
+
+basic program:
+ //load data
+ //main loop - do while !canQuit
+ 	//waits for console input
+ 	//checks if input is purely "shutdown".
+ 		//sets canQuit to true
+ 	//else
+ 		//interprete input and display relationship and does ai stuff
+ //saves data
+ //closes

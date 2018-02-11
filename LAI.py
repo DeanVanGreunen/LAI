@@ -92,7 +92,7 @@ class AI_MEMORY():
 					# Log to ai some how
 					Log("error", "Cannot Load Memory {name}".format(name=memory_file))
 		except Exception as e:
-			Log("error","Cannot Load Atom or Memory Data, " + e.message)
+			Log("error","Cannot Load Atom or Memory Data, "  + " "+ str(e.args))
 
 	def Save(self, path):
 		self.path = path
@@ -109,7 +109,7 @@ class AI_MEMORY():
 					Output("".ljust(total-count, u"█").rjust(count, "#"))
 				except Exception as e:
 					# Log to ai some how
-					Log("error", "Cannot Save Atom {name}".format(name=atom.id) + " " + e)
+					Log("error", "Cannot Save Atom {name}".format(name=atom.id) + " "+ str(e.args))
 			for memory in self.memories:
 				try:
 					#load Memory
@@ -117,9 +117,9 @@ class AI_MEMORY():
 					Output("".ljust(total-count, u"█").rjust(count, "#"))
 				except Exception as e:
 					# Log to ai some how
-					Log("error", "Cannot Load Memory {name}".format(name=memory.id))
+					Log("error", "Cannot Load Memory {name}".format(name=memory.id)+ str(e.args))
 		except Exception as e:
-			Log("error","Cannot Save Atom or Memory Data, " + e.message)
+			Log("error","Cannot Save Atom or Memory Data,"  + " "+ str(e.args))
 
 #/////////////////////////////////////////////////////////
 # End of App Vars
